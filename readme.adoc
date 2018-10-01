@@ -1,0 +1,5 @@
+= Go-Lang Mathematics
+
+== Building
+
+    glide install --strip-vendor

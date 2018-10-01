@@ -1,0 +1,9 @@
+package: github.com/grgrzybek/gomath
+homepage: https://github.com/grgrzybek/gomath
+license: Apache-2.0
+owners:
+  - name: Grzegorz Grzybek
+    email: gr.grzybek@gmail.com
+import:
+  - package: github.com/golang/glog
+testImport: []
