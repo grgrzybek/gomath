@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -57,6 +57,14 @@ func TestAdding(t *testing.T) {
 	fmt.Printf("fourty two: %s\n", _42)
 	fmt.Printf("fourty two plus eighteen: %s\n", _42.Add(NewN("18")))
 	fmt.Printf("fourty two: %s\n", _42)
+}
+
+func TestMultiplying(t *testing.T) {
+	var zero = ZERO
+	fmt.Printf("zero: %s\n", zero.String())
+	fmt.Printf("zero x three: %s\n", zero.Multiply(NewN("3")))
+	fmt.Printf("56 x 3: %s\n", NewN("56").Multiply(NewN("3")))
+	fmt.Printf("56 x 121: %s\n", NewN("56").Multiply(NewN("121")))
 }
 
 func display(s fmt.Stringer) {
