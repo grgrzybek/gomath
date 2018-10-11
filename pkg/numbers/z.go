@@ -83,7 +83,7 @@ func (z *Z) String() string {
 //    -> B + ((0 - |A|) + |A|) = |A| + x -> B = |A| + x -> x = B - |A|
 //  - A < 0, B < 0: (0 - |A|) + (0 - |B|) = x -> (0 - |A|) + |A| + (0 - |B|) + |B| = x + |A| + |B|
 //    -> ((0 - |A|) + |A|) + ((0 - |B|) + |B|) = x + |A| + |B| -> 0 = x + (|A| + |B|)
-//    -> 0 = (|A| + |B|) + x -> x = 0 - (|A| + |B|)
+//    -> 0 = (|A| + |B|) + x -> x = 0 - (|A| + |B|) = - (|A| + |B|)
 func (z *Z) Add(arg *Z) *Z {
 	if z.value >= 0 && arg.value >= 0 {
 		a := &N{value: uint64(z.value)}
@@ -107,13 +107,36 @@ func (z *Z) Add(arg *Z) *Z {
 }
 
 // A * B:
-//  - A = -1, B > 0: A * B = (0 - 1) * B
 //  - A > 0, B > 0: as in ℕ (N.Multiply)
-//  - A > 0, B < 0: A * (0 - |B|) =
-//  - A < 0, B > 0: A + B = B + A = B + (0 - |A|) = B - |A| (DefZ)
-//  - A < 0, B < 0: (0 - |A|) + (0 - |B|) = - |A| - |B|
-func (z *Z) Multiply(*Z) *Z {
-	panic("implement me")
+//  - A > 0, B < 0: A * (0 - |B|) = x -> (A * (0 - |B|)) + (A * |B|) = x + (A * |B|)
+//    -> A * ((0 - |B|) + |B|) = x + (A * |B|) -> 0 = (A * |B|) + x -> x = 0 - (A * |B|) = - (A * |B|)
+//  - A < 0, B > 0: A * B = - (|A| * B) (as above)
+//  - A > 0: -1 * A = -(|-1| * A) = -A
+//  - -1 * -1: 0 = -1 * 0 = -1 * (1 - 1) = -1 * 1 + (-1 * -1) = -1 + (-1 * -1) = 0 -> (-1 * -1) = 0 + 1 + 0 -> -1 * -1 = 1
+//  - A < 0, B < 0: (0 - |A|) * (0 - |B|) = x -> (-1 * |A|) * (-1 * |B|) = x -> -1 * |A| * -1 * |B| = x
+//    -> x = (-1 * -1) * (|A| * |B|)) = 1 * (|A| * |B|) = |A| * |B|
+func (z *Z) Multiply(arg *Z) *Z {
+	if z.value >= 0 && arg.value >= 0 {
+		a := &N{value: uint64(z.value)}
+		b := &N{value: uint64(arg.value)}
+		c := a.Multiply(b)
+		return &Z{value: int64(c.value)}
+	} else if z.value >= 0 && arg.value < 0 {
+		a := &N{value: uint64(z.value)}
+		b := &N{value: uint64(-arg.value)} // get rid of "-" from negative integer to get ℕ
+		c := a.Multiply(b)
+		return &Z{value: -int64(c.value)}
+	} else if z.value < 0 && arg.value >= 0 {
+		a := &N{value: uint64(-z.value)} // get rid of "-" from negative integer to get ℕ
+		b := &N{value: uint64(arg.value)}
+		c := a.Multiply(b)
+		return &Z{value: -int64(c.value)}
+	} else {
+		a := &N{value: uint64(-z.value)}   // get rid of "-" from negative integer to get ℕ
+		b := &N{value: uint64(-arg.value)} // get rid of "-" from negative integer to get ℕ
+		c := a.Multiply(b)
+		return &Z{value: int64(c.value)}
+	}
 }
 
 func (z *Z) Power(*Z) *Z {

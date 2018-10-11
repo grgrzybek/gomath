@@ -43,3 +43,11 @@ func TestAddZ(t *testing.T) {
 	fmt.Printf("-10 + 3: %s\n", NewZ("-10").Add(NewZ("3")))
 	fmt.Printf("-10 + -3: %s\n", NewZ("-10").Add(NewZ("-3")))
 }
+
+func TestMultiplyZ(t *testing.T) {
+	fmt.Printf("1 * -3: %s\n", NewZ("1").Multiply(NewZ("-3")))
+	fmt.Printf("1 * 3: %s\n", NewZ("1").Multiply(NewZ("3")))
+	fmt.Printf("-1 * 3: %s\n", NewZ("-1").Multiply(NewZ("3")))
+	fmt.Printf("-10 * 3: %s\n", NewZ("-10").Multiply(NewZ("3")))
+	fmt.Printf("-10 * -3: %s\n", NewZ("-10").Multiply(NewZ("-3")))
+}
