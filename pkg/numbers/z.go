@@ -19,6 +19,7 @@
 package numbers
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -40,8 +41,8 @@ type Z struct {
 type ZOperations interface {
 	Add(*Z) *Z
 	Multiply(*Z) *Z
-	Power(*Z) *Z
-	Subtract(*Z) (*Z, error)
+	Power(*Z) (*Z, error)
+	Subtract(*Z) *Z
 	Divide(*Z) (*Z, error)
 	Root(*Z) (*Z, error)
 	Logarithm(*Z) (*Z, error)
@@ -76,10 +77,10 @@ func (z *Z) String() string {
 }
 
 // A + B:
-//  - A > 0, B > 0: as in ℕ
-//  - A > 0, B < 0: A + (0 - |B|) = x -> (A + (0 - |B|)) + |B| = x + |B| -> A + ((0 - |B|) + |B|) = x + |B|
+//  - A >= 0, B >= 0: as in ℕ
+//  - A >= 0, B < 0: A + (0 - |B|) = x -> (A + (0 - |B|)) + |B| = x + |B| -> A + ((0 - |B|) + |B|) = x + |B|
 //    -> A = |B| + x -> x = A - |B|
-//  - A < 0, B > 0: A + B = B + A = B + (0 - |A|) = x -> (B + (0 - |A|)) + |A| = x + |A|
+//  - A < 0, B >= 0: A + B = B + A = B + (0 - |A|) = x -> (B + (0 - |A|)) + |A| = x + |A|
 //    -> B + ((0 - |A|) + |A|) = |A| + x -> B = |A| + x -> x = B - |A|
 //  - A < 0, B < 0: (0 - |A|) + (0 - |B|) = x -> (0 - |A|) + |A| + (0 - |B|) + |B| = x + |A| + |B|
 //    -> ((0 - |A|) + |A|) + ((0 - |B|) + |B|) = x + |A| + |B| -> 0 = x + (|A| + |B|)
@@ -107,12 +108,12 @@ func (z *Z) Add(arg *Z) *Z {
 }
 
 // A * B:
-//  - A > 0, B > 0: as in ℕ (N.Multiply)
-//  - A > 0, B < 0: A * (0 - |B|) = x -> (A * (0 - |B|)) + (A * |B|) = x + (A * |B|)
+//  - A >= 0, B >= 0: as in ℕ (N.Multiply)
+//  - A >= 0, B < 0: A * (0 - |B|) = x -> (A * (0 - |B|)) + (A * |B|) = x + (A * |B|)
 //    -> A * ((0 - |B|) + |B|) = x + (A * |B|) -> 0 = (A * |B|) + x -> x = 0 - (A * |B|) = - (A * |B|)
-//  - A < 0, B > 0: A * B = - (|A| * B) (as above)
+//  - A < 0, B >= 0: A * B = - (|A| * B) (as above)
 //  - A > 0: -1 * A = -(|-1| * A) = -A
-//  - -1 * -1: 0 = -1 * 0 = -1 * (1 - 1) = -1 * 1 + (-1 * -1) = -1 + (-1 * -1) = 0 -> (-1 * -1) = 0 + 1 + 0 -> -1 * -1 = 1
+//  - -1 * -1: 0 = -1 * 0 = -1 * (1 - 1) = -1 * 1 + (-1 * -1) = -1 + (-1 * -1) = 0 -> (-1 * -1) = 0 + 1 -> -1 * -1 = 1
 //  - A < 0, B < 0: (0 - |A|) * (0 - |B|) = x -> (-1 * |A|) * (-1 * |B|) = x -> -1 * |A| * -1 * |B| = x
 //    -> x = (-1 * -1) * (|A| * |B|)) = 1 * (|A| * |B|) = |A| * |B|
 func (z *Z) Multiply(arg *Z) *Z {
@@ -139,12 +140,53 @@ func (z *Z) Multiply(arg *Z) *Z {
 	}
 }
 
-func (z *Z) Power(*Z) *Z {
-	panic("implement me")
+// A ^ B:
+//  - A >= 0, B >= 0: as in ℕ (N.Power)
+//  - A < 0, B >= 0: as in ℕ but reimplemented with Z.Multiply
+//  - B < 0: B = 0 - |B| -> B + |B| = 0 -> A ^ (B + |B|) = A ^ 0 -> A^B * A^|B| = 1 -> A^B = 1 / A^|B|
+func (z *Z) Power(arg *Z) (*Z, error) {
+	if z.value >= 0 && arg.value >= 0 {
+		a := &N{value: uint64(z.value)} // get rid of "-" from negative integer to get ℕ
+		b := &N{value: uint64(arg.value)}
+		c := a.Power(b)
+		return &Z{value: int64(c.value)}, nil
+	} else if arg.value >= 0 {
+		// reimplement from ℕ instead of delegate to ℕ
+		res := NewZ("1")
+		for i := int64(0); i < arg.value; i++ {
+			res = res.Multiply(z)
+		}
+		return res, nil
+	} else {
+		return nil, errors.New("no solution in \u2124")
+	}
 }
 
-func (z *Z) Subtract(*Z) (*Z, error) {
-	panic("implement me")
+// A - B = x -> B = A - x
+//  - A >= 0, B >= 0: DefZ
+//  - A >= 0, B < 0: A - (0 - |B|) = x -> A = x + (0 - |B|) -> A + |B| = x + ((0 - |B|) + |B|) -> x = A + |B|
+//  - A < 0, B >= 0: (0 - |A|) - B = x -> 0 = x + (B + |A|) -> x = -(|A| + B)
+//  - A < 0, B < 0: (0 - |A|) - (0 - |B|) = x -> (0 - |A|) = (0 - |B|) + x -> 0 = (0 - |B|) + x + |A|
+//    -> 0 = ((0 - |B|) + |A|) + x -> x = 0 - (|A| + (0 - |B|)) 0 -> x = -(|A| - |B|)
+func (z *Z) Subtract(arg *Z) *Z {
+	if z.value >= 0 && arg.value >= 0 {
+		return DefZ(&N{value: uint64(z.value)}, &N{value: uint64(arg.value)})
+	} else if z.value >= 0 && arg.value < 0 {
+		a := z
+		b := &Z{value: -arg.value}
+		c := a.Add(b)
+		return &Z{value: int64(c.value)}
+	} else if z.value < 0 && arg.value >= 0 {
+		a := &Z{value: -z.value}
+		b := arg
+		c := a.Add(b)
+		return &Z{value: -int64(c.value)}
+	} else {
+		a := &Z{value: -z.value}
+		b := &Z{value: -arg.value}
+		c := a.Subtract(b)
+		return &Z{value: -int64(c.value)}
+	}
 }
 
 func (z *Z) Divide(*Z) (*Z, error) {
@@ -157,13 +199,6 @@ func (z *Z) Root(*Z) (*Z, error) {
 
 func (z *Z) Logarithm(*Z) (*Z, error) {
 	panic("implement me")
-}
-
-// and we only know how to "add 1" - find "next" number
-func (z *Z) addOne() *Z {
-	res := &Z{value: z.value}
-	res.value++
-	return res
 }
 
 var _ = fmt.Stringer(&Z{})

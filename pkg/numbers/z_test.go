@@ -51,3 +51,81 @@ func TestMultiplyZ(t *testing.T) {
 	fmt.Printf("-10 * 3: %s\n", NewZ("-10").Multiply(NewZ("3")))
 	fmt.Printf("-10 * -3: %s\n", NewZ("-10").Multiply(NewZ("-3")))
 }
+
+func TestPowerZ(t *testing.T) {
+	if z, e := NewZ("0").Power(NewZ("0")); e == nil {
+		fmt.Printf("0^0: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("1").Power(NewZ("1")); e == nil {
+		fmt.Printf("1^1: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("0").Power(NewZ("3")); e == nil {
+		fmt.Printf("0^3: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("3").Power(NewZ("0")); e == nil {
+		fmt.Printf("3^0: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("2").Power(NewZ("16")); e == nil {
+		fmt.Printf("2^16: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("10").Power(NewZ("6")); e == nil {
+		fmt.Printf("10^6: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+
+	if z, e := NewZ("-1").Power(NewZ("1")); e == nil {
+		fmt.Printf("-1^1: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("-3").Power(NewZ("0")); e == nil {
+		fmt.Printf("-3^0: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("-2").Power(NewZ("16")); e == nil {
+		fmt.Printf("-2^16: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("-10").Power(NewZ("6")); e == nil {
+		fmt.Printf("-10^6: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+	if z, e := NewZ("-10").Power(NewZ("5")); e == nil {
+		fmt.Printf("-10^5: %s\n", z)
+	} else {
+		_ = fmt.Errorf("%s\n", e)
+	}
+
+	if z, e := NewZ("1").Power(NewZ("-1")); e == nil {
+		fmt.Printf("1^-1: %s\n", z)
+	} else {
+		fmt.Printf("1^-1: %s\n", fmt.Errorf("%s", e))
+	}
+	if z, e := NewZ("-1").Power(NewZ("-1")); e == nil {
+		fmt.Printf("-1^-1: %s\n", z)
+	} else {
+		fmt.Printf("-1^-1: %s\n", fmt.Errorf("%s", e))
+	}
+}
+
+func TestSubtractZ(t *testing.T) {
+	fmt.Printf("1 - -3: %s\n", NewZ("1").Subtract(NewZ("-3")))
+	fmt.Printf("1 - 3: %s\n", NewZ("1").Subtract(NewZ("3")))
+	fmt.Printf("-1 - 3: %s\n", NewZ("-1").Subtract(NewZ("3")))
+	fmt.Printf("-10 - 3: %s\n", NewZ("-10").Subtract(NewZ("3")))
+	fmt.Printf("-10 - -3: %s\n", NewZ("-10").Subtract(NewZ("-3")))
+}
