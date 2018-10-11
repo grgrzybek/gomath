@@ -25,19 +25,6 @@ package numbers
  * Rational numbers: ℚ, u211A
  * Real numbers: ℝ, u211D
  * Complex numbers: ℂ, u2102
- *
- * Basic Rules for addition, multiplication and raising to a power (steming from definition):
- * (a) a+b = b+a
- * (d) a+(b+c) = (a+b)+c
- * (b) a*b = b*a
- * (c) a*(b+c) = a*b + a*c
- * (e) (a*b)*c = a*(b*c)
- * (f) (a*b)^c = a^c * b^c
- * (g) a^b * a^c = a^(b+c)
- * (h) (a^b)^c = a^(b*c)
- * (i) a+0 = a
- * (j) a*1 = a
- * (k) a^1 = a
  */
 
 import (
@@ -53,22 +40,48 @@ var (
 
 // Natural numbers including ZERO
 // We suppose that we already know what integers are, what zero is, and what it means to increase a number by one unit.
+//
+// Basic Rules for addition, multiplication and raising to a power (steming from definition):
+//  - (a) a+b = b+a
+//  - (d) a+(b+c) = (a+b)+c
+//  - (b) a*b = b*a
+//  - (c) a*(b+c) = a*b + a*c
+//  - (e) (a*b)*c = a*(b*c)
+//  - (f) (a*b)^c = a^c * b^c
+//  - (g) a^b * a^c = a^(b+c)
+//  - (h) (a^b)^c = a^(b*c)
+//  - (i) a+0 = a
+//  - (j) a*1 = a
+//  - (k) a^1 = a
 type N struct {
 	value uint64
 
-	// mark N as "implementing fmt.Stringer" using anonymous field / embedded type
+	// mark ℕ as "implementing fmt.Stringer" using anonymous field / embedded type
 	// https://golang.org/doc/effective_go.html#embedding
 	// When we embed a type, the methods of that type become methods of the outer type, but when
 	// they are invoked the receiver of the method is the inner type, not the outer one.
 	fmt.Stringer
-	NOperations
+	// NOperations
 }
 
 type NOperations interface {
 	Add(*N) *N
 	Multiply(*N) *N
 	Power(*N) *N
-	Subtract(*N) (*N, error)
+	Subtract(*N) (*N, *Z)
+	Divide(*N) (*N, error)
+	Root(*N) (*N, error)
+	Logarithm(*N) (*N, error)
+}
+
+// NewN Creates new ℕ from string
+func NewN(v string) *N {
+	value, _ := strconv.Atoi(v)
+	res := &ZERO
+	for i := 0; i < value; i++ {
+		res = res.addOne()
+	}
+	return res
 }
 
 // Override promoted methods, by default it's just n.String() -> n.Stringer.String() and is causing NPE
@@ -105,9 +118,10 @@ func (n *N) Power(arg *N) *N {
 }
 
 // "Subtraction": Assuming A and C are given, we want to find B that "A + B = C". Then B is defined as "C - A"
-func (n *N) Subtract(arg *N) (*N, error) {
+func (n *N) Subtract(arg *N) (*N, *Z) {
 	if n.value < arg.value {
-		return nil, errors.New("no solution in \u2115")
+		// no solution in ℕ, switching to ℤ and returning ℤ by definition
+		return nil, DefZ(n, arg)
 	}
 
 	res := &ZERO
@@ -164,7 +178,7 @@ func (n *N) Root(arg *N) (*N, error) {
 
 // "Logarithm": Assuming A and C are given, we want to find B that "A ^ B = C", Then B is defined as "log A (C)".
 // n is base, arg is the argument, result is a power to which we need to raise n, to get arg
-func (n *N) Log(arg *N) (*N, error) {
+func (n *N) Logarithm(arg *N) (*N, error) {
 	if arg.value == 0 {
 		return nil, errors.New("can't take logarithm from ZERO")
 	}
@@ -187,16 +201,6 @@ func (n *N) Log(arg *N) (*N, error) {
 	}
 
 	return nil, errors.New("no solution in \u2115")
-}
-
-// NewN Creates new N from string
-func NewN(v string) *N {
-	value, _ := strconv.Atoi(v)
-	res := &ZERO
-	for i := 0; i < value; i++ {
-		res = res.addOne()
-	}
-	return res
 }
 
 // and we only know how to "add 1" - find "next" number

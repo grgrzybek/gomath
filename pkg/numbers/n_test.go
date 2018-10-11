@@ -176,57 +176,57 @@ func TestRoot(t *testing.T) {
 }
 
 func TestLogarithm(t *testing.T) {
-	if n, e := NewN("1").Log(NewN("1")); e == nil {
+	if n, e := NewN("1").Logarithm(NewN("1")); e == nil {
 		fmt.Printf("log 1 (1): %s\n", n)
 	} else {
 		fmt.Printf("log 1 (1): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("1").Log(NewN("4")); e == nil {
+	if n, e := NewN("1").Logarithm(NewN("4")); e == nil {
 		fmt.Printf("log 1 (4): %s\n", n)
 	} else {
 		fmt.Printf("log 1 (4): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("4").Log(NewN("1")); e == nil {
+	if n, e := NewN("4").Logarithm(NewN("1")); e == nil {
 		fmt.Printf("log 4 (1): %s\n", n)
 	} else {
 		fmt.Printf("log 4 (1): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("2").Log(NewN("9")); e == nil {
+	if n, e := NewN("2").Logarithm(NewN("9")); e == nil {
 		fmt.Printf("log 2 (9): %s\n", n)
 	} else {
 		fmt.Printf("log 2 (9): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("3").Log(NewN("9")); e == nil {
+	if n, e := NewN("3").Logarithm(NewN("9")); e == nil {
 		fmt.Printf("log 3 (9): %s\n", n)
 	} else {
 		fmt.Printf("log 3 (9): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("4").Log(NewN("16")); e == nil {
+	if n, e := NewN("4").Logarithm(NewN("16")); e == nil {
 		fmt.Printf("log 4 (16): %s\n", n)
 	} else {
 		fmt.Printf("log 4 (16): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("16").Log(NewN("65536")); e == nil {
+	if n, e := NewN("16").Logarithm(NewN("65536")); e == nil {
 		fmt.Printf("log 16 (65536): %s\n", n)
 	} else {
 		fmt.Printf("log 16 (65536): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("2").Log(NewN("65536")); e == nil {
+	if n, e := NewN("2").Logarithm(NewN("65536")); e == nil {
 		fmt.Printf("log 2 (65536): %s\n", n)
 	} else {
 		fmt.Printf("log 2 (65536): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("3").Log(NewN("0")); e == nil {
+	if n, e := NewN("3").Logarithm(NewN("0")); e == nil {
 		fmt.Printf("log 3 (0): %s\n", n)
 	} else {
 		fmt.Printf("log 3 (0): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("0").Log(NewN("3")); e == nil {
+	if n, e := NewN("0").Logarithm(NewN("3")); e == nil {
 		fmt.Printf("log 0 (3): %s\n", n)
 	} else {
 		fmt.Printf("log 0 (3): %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("0").Log(NewN("0")); e == nil {
+	if n, e := NewN("0").Logarithm(NewN("0")); e == nil {
 		fmt.Printf("log 0 (0): %s\n", n)
 	} else {
 		fmt.Printf("log 0 (0): %s\n", fmt.Errorf("%s", e))
