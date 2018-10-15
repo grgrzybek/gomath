@@ -19,7 +19,6 @@
 package numbers
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -41,11 +40,11 @@ type Z struct {
 type ZOperations interface {
 	Add(*Z) *Z
 	Multiply(*Z) *Z
-	Power(*Z) (*Z, error)
+	Power(*Z) (*Z, *Q, error)
 	Subtract(*Z) *Z
-	Divide(*Z) (*Z, error)
-	Root(*Z) (*Z, error)
-	Logarithm(*Z) (*Z, error)
+	Divide(*Z) (*Z, *Q, error)
+	Root(*Z) (*Z, *Q)
+	Logarithm(*Z) (*Z, *Q)
 }
 
 // NewZ Creates new ℤ from string
@@ -56,7 +55,7 @@ func NewZ(v string) *Z {
 	return res
 }
 
-// DefZ Creates new ℤ as a result of subtracting two ℕs - definition of ℤ. Having ℤ defined and having
+// DefZ creates new ℤ as a result of subtracting two ℕs - definition of ℤ. Having ℤ defined and having
 // the basic rules described for ℕ, we can implement the operations for ℤ
 //
 // if A < B, A is decreased to 0 and resulting (A - B) = (0 - (B - A)) is called "negative integer"
@@ -144,21 +143,23 @@ func (z *Z) Multiply(arg *Z) *Z {
 //  - A >= 0, B >= 0: as in ℕ (N.Power)
 //  - A < 0, B >= 0: as in ℕ but reimplemented with Z.Multiply
 //  - B < 0: B = 0 - |B| -> B + |B| = 0 -> A ^ (B + |B|) = A ^ 0 -> A^B * A^|B| = 1 -> A^B = 1 / A^|B|
-func (z *Z) Power(arg *Z) (*Z, error) {
+func (z *Z) Power(arg *Z) (*Z, *Q, error) {
 	if z.value >= 0 && arg.value >= 0 {
-		a := &N{value: uint64(z.value)} // get rid of "-" from negative integer to get ℕ
+		a := &N{value: uint64(z.value)}
 		b := &N{value: uint64(arg.value)}
 		c := a.Power(b)
-		return &Z{value: int64(c.value)}, nil
+		return &Z{value: int64(c.value)}, nil, nil
 	} else if arg.value >= 0 {
 		// reimplement from ℕ instead of delegate to ℕ
 		res := NewZ("1")
 		for i := int64(0); i < arg.value; i++ {
 			res = res.Multiply(z)
 		}
-		return res, nil
+		return res, nil, nil
 	} else {
-		return nil, errors.New("no solution in \u2124")
+		// possibly no solution in ℤ - delegating to Z.Divide which may switch to ℚ
+		res, _, _ := z.Power(&Z{value: -arg.value})
+		return (&Z{value: 1}).Divide(res)
 	}
 }
 
@@ -189,15 +190,99 @@ func (z *Z) Subtract(arg *Z) *Z {
 	}
 }
 
-func (z *Z) Divide(*Z) (*Z, error) {
+// A / B:
+//  - A >= 0, B >= 0: A / B (needs an implementaion, possible delegation to ℕ
+//  - A >= 0, B < 0: -(A / |B|)
+//  - A < 0, B >= 0: -(|A| / B)
+//  - A < 0, B < 0: |A| / |B|
+func (z *Z) Divide(arg *Z) (*Z, *Q, error) {
+	if z.value >= 0 && arg.value >= 0 {
+		a := &N{value: uint64(z.value)}
+		b := &N{value: uint64(arg.value)}
+		zres, qres, e := a.Divide(b)
+		if zres != nil {
+			return &Z{value: int64(zres.value)}, nil, nil
+		}
+		if qres != nil {
+			return nil, qres, nil
+		}
+		return nil, nil, e
+	} else if z.value >= 0 && arg.value < 0 {
+		zres, qres, e := z.Divide(&Z{value: -arg.value})
+		if zres != nil {
+			zres.value = -zres.value
+			return zres, nil, nil
+		}
+		if qres != nil {
+			qres.a = -qres.a
+			return nil, qres, nil
+		}
+		return nil, nil, e
+	} else if z.value < 0 && arg.value >= 0 {
+		zres, qres, e := (&Z{value: -z.value}).Divide(arg)
+		if zres != nil {
+			zres.value = -zres.value
+			return zres, nil, nil
+		}
+		if qres != nil {
+			qres.a = -qres.a
+			return nil, qres, nil
+		}
+		return nil, nil, e
+	} else {
+		zres, qres, e := (&Z{value: -z.value}).Divide(&Z{value: -arg.value})
+		if zres != nil {
+			return zres, nil, nil
+		}
+		if qres != nil {
+			return nil, qres, nil
+		}
+		return nil, nil, e
+	}
+	return nil, nil, nil
+}
+
+// A div B: division with remainder: A = QB + R and 0 <= R < |B|
+// // C99 chooses the remainder with the same sign as the dividend A
+//  - A >= 0, B >= 0: delegate to ℕ
+//  - A >= 0, B < 0: -(A / |B|)
+//  - A < 0, B >= 0: -(|A| / B)
+//  - A < 0, B < 0: |A| / |B|
+func (z *Z) DivideR(arg *Z) (*Z, *Z, error) {
+	a := z.value
+	b := arg.value
+	negres := false
+	negrem := false
+	if a < 0 && b >= 0 || a >= 0 && b < 0 {
+		negres = true
+	}
+	if a < 0 {
+		negrem = true
+		a = -a
+	}
+	if b < 0 {
+		b = -b
+	}
+	av := &N{value: uint64(a)}
+	bv := &N{value: uint64(b)}
+	res, rem, e := av.DivideR(bv)
+	if res != nil && rem != nil {
+		if negrem {
+			rem.value = -rem.value
+		}
+		if negres {
+			res.value = -res.value
+		}
+		return &Z{value: int64(res.value)}, &Z{value: int64(rem.value)}, nil
+	}
+	return nil, nil, e
+}
+
+func (z *Z) Root(*Z) (*Z, *Q) {
 	panic("implement me")
 }
 
-func (z *Z) Root(*Z) (*Z, error) {
-	panic("implement me")
-}
-
-func (z *Z) Logarithm(*Z) (*Z, error) {
+func (z *Z) Logarithm(*Z) (*Z, *Q) {
 	panic("implement me")
 }
 

@@ -69,7 +69,7 @@ type NOperations interface {
 	Multiply(*N) *N
 	Power(*N) *N
 	Subtract(*N) (*N, *Z)
-	Divide(*N) (*N, error)
+	Divide(*N) (*N, *Q, error)
 	Root(*N) (*N, error)
 	Logarithm(*N) (*N, error)
 }
@@ -136,15 +136,15 @@ func (n *N) Subtract(arg *N) (*N, *Z) {
 }
 
 // "Division": Assuming A and C are given, we want to find B that "A * B = C". Then B is defined as "C / A"
-func (n *N) Divide(arg *N) (*N, error) {
+func (n *N) Divide(arg *N) (*N, *Q, error) {
 	if arg.value == 0 {
-		return nil, errors.New("can't divide by ZERO")
+		return nil, nil, errors.New("can't divide by ZERO")
 	}
 
 	res := &ZERO
 	for {
 		if arg.Multiply(res).value == n.value {
-			return res, nil
+			return res, nil, nil
 		}
 		if arg.Multiply(res).value > n.value {
 			break
@@ -152,7 +152,30 @@ func (n *N) Divide(arg *N) (*N, error) {
 		res = res.addOne()
 	}
 
-	return nil, errors.New("no solution in \u2115")
+	// immediately delegate to ℚ
+	return nil, DefQ(&Z{value: int64(n.value)}, &Z{value: int64(arg.value)}), nil
+}
+
+// Division with Remainder: A = QB + R and 0 <= R < |B|
+func (n *N) DivideR(arg *N) (*N, *N, error) {
+	if arg.value == 0 {
+		return nil, nil, errors.New("can't divide by ZERO")
+	}
+
+	res := &ZERO
+	for {
+		if arg.Multiply(res).value == n.value {
+			return res, &ZERO, nil
+		}
+		if arg.Multiply(res).value > n.value {
+			break
+		}
+		res = res.addOne()
+	}
+
+	res1, _ := res.Subtract(NewN("1"))
+	rem, _ := n.Subtract(res1.Multiply(arg))
+	return res1, rem, nil
 }
 
 // "Root": Assuming A and C are given, we want to find B that "B ^ A = C", Then B is defined as "Ath√C".

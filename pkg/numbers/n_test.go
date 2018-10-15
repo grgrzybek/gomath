@@ -95,31 +95,42 @@ func TestSubtract(t *testing.T) {
 }
 
 func TestDivide(t *testing.T) {
-	if n, e := NewN("140").Divide(NewN("10")); e == nil {
+	if n, _, e := NewN("140").Divide(NewN("10")); e == nil {
 		fmt.Printf("140/10: %s\n", n)
 	} else {
 		fmt.Printf("140/10: %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("140").Divide(NewN("11")); e == nil {
+	if n, _, e := NewN("140").Divide(NewN("11")); e == nil {
 		fmt.Printf("140/11: %s\n", n)
 	} else {
 		fmt.Printf("140/11: %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("42").Divide(NewN("42")); e == nil {
+	if n, _, e := NewN("42").Divide(NewN("42")); e == nil {
 		fmt.Printf("42/42: %s\n", n)
 	} else {
 		fmt.Printf("42/42: %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("0").Divide(NewN("42")); e == nil {
+	if n, _, e := NewN("0").Divide(NewN("42")); e == nil {
 		fmt.Printf("0/42: %s\n", n)
 	} else {
 		fmt.Printf("0/42: %s\n", fmt.Errorf("%s", e))
 	}
-	if n, e := NewN("1").Divide(NewN("0")); e == nil {
+	if n, _, e := NewN("1").Divide(NewN("0")); e == nil {
 		fmt.Printf("1/0: %s\n", n)
 	} else {
 		fmt.Printf("1/0: %s\n", fmt.Errorf("%s", e))
 	}
+}
+
+func TestDivideR(t *testing.T) {
+	divideR("140", "10")
+	divideR("140", "11")
+	divideR("42", "42")
+	divideR("0", "42")
+	divideR("1", "0")
+	divideR("25", "10")
+	divideR("10", "3")
+	divideR("3", "10")
 }
 
 func TestRoot(t *testing.T) {
@@ -238,4 +249,13 @@ func display(s fmt.Stringer) {
 	// fmt.Printf can handle fmt.Stringer interface
 	fmt.Printf("%s\n", s)
 	// glog.Info(s)
+}
+
+func divideR(a string, b string) {
+	z, r, e := NewN(a).DivideR(NewN(b))
+	if z != nil {
+		fmt.Printf("%s/%s: %s r %s\n", a, b, z, r)
+	} else {
+		fmt.Printf("%s/%s: %s\n", a, b, fmt.Errorf("%s", e))
+	}
 }
